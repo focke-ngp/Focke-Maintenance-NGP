@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NGP 포장기 월간 정비 리스트</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f0f4f8;color:#333}
+#authLoading{position:fixed;inset:0;background:#0070c0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:9999}
+.spinner{width:48px;height:48px;border:5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{background:#00467f;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{font-size:1.25rem}
+header span{font-size:.82rem;opacity:.85}
+.hright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.conn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:999px;font-size:.78rem;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:#aaa}
+.dot.on{background:#4cff72}
+.dot.off{background:#ff4c4c}
+.btn{padding:8px 14px;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer}
+.pri{background:#0070c0;color:#fff}
+.sec{background:#6c757d;color:#fff}
+.exp{background:#1d6f42;color:#fff}
+.alm{background:#fd7e14;color:#fff;border-radius:50px}
+.notice{display:none;background:#bbdefb;border-left:5px solid #0070c0;padding:10px 18px;margin:10px 18px 0;border-radius:8px;font-size:.82rem;font-weight:600;color:#00467f}
+.banner{display:none;border-left:5px solid #ffc107;padding:10px 18px;margin:10px 18px 0;border-radius:8px;background:#ffe69c}
+.banner.dg{background:#f5c2c7;border-left-color:#dc3545}
+.btitle{font-weight:700;font-size:.85rem;margin-bottom:5px}
+.bitem{font-size:.78rem;padding:2px 0}
+.bclose{float:right;background:none;border:none;font-size:1rem;cursor:pointer;opacity:.6}
+.wrap{max-width:1400px;margin:0 auto;padding:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:18px}
+.card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07);border-top:4px solid #0070c0}
+.card .n{font-size:1.6rem;font-weight:800}
+.card .l{font-size:.75rem;color:#666}
+.card.g{border-top-color:#28a745}
+.card.y{border-top-color:#ffc107}
+.card.r{border-top-color:#dc3545}
+.card.o{border-top-color:#fd7e14}
+.card.t{border-top-color:#20c997}
+.card.g .n{color:#28a745}
+.card.y .n{color:#e0a800}
+.card.r .n{color:#dc3545}
+.card.o .n{color:#fd7e14}
+.card.t .n{color:#20c997}
+.pwrap{background:#fff;border-radius:10px;padding:14px 18px;margin-bottom:18px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.plabel{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;margin-bottom:5px}
+.pbg{background:#e9ecef;border-radius:999px;height:11px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,#28a745,#85d99e);border-radius:999px;transition:width .5s}
+.tbar{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.tbar input,.tbar select{padding:7px 10px;border:1px solid #ccc;border-radius:7px;font-size:.82rem}
+.tbar input{width:190px}
+.twrap{background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.07);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:980px}
+thead tr{background:#0070c0;color:#fff}
+thead th{padding:10px 6px;text-align:center;white-space:nowrap}
+tbody tr{border-bottom:1px solid #e9ecef}
+tbody tr:nth-child(even){background:#fafafa}
+tr.today{background:#fff3e0!important}
+tr.soon{background:#fffde7!important}
+tr.delay{background:#ffeef0!important}
+tbody td{padding:8px 5px;text-align:center}
+tbody td:nth-child(4){text-align:left;padding-left:8px}
+.dday{display:inline-block;padding:2px 6px;border-radius:999px;font-size:.68rem;font-weight:700;margin-left:3px}
+.dt{background:#fd7e14;color:#fff}
+.ds{background:#ffc107;color:#333}
+.dl{background:#dc3545;color:#fff}
+.dn{background:#e9ecef;color:#555}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.b완료{background:#d4edda;color:#155724}
+.b진행중{background:#fff3cd;color:#856404}
+.b미완료{background:#e9ecef;color:#495057}
+.b지연{background:#f8d7da;color:#721c24}
+.b정상{background:#d4edda;color:#155724}
+.b이상{background:#ffe0b2;color:#b45309}
+.b보류{background:#e2d9f3;color:#4a235a}
+.abtns{display:flex;gap:3px;justify-content:center}
+.bsm{padding:4px 7px;font-size:.72rem;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+.be{background:#e3f2fd;color:#0070c0}
+.bd{background:#d4edda;color:#155724}
+.bx{background:#f8d7da;color:#721c24}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;justify-content:center;align-items:center}
+.ovl.on{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:95%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.modal h2{font-size:1.05rem;color:#00467f;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e9ecef}
+.modal.al h2{color:#dc3545;border-bottom-color:#f8d7da}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:.78rem;font-weight:600;color:#555}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid #ccc;border-radius:7px;font-size:.82rem;font-family:inherit}
+.fg textarea{resize:vertical;min-height:50px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #e9ecef}
+.aitem{display:flex;gap:10px;padding:10px;border-radius:8px;margin-bottom:8px;border:1px solid #e9ecef}
+.aitem.dl{background:#ffeef0;border-color:#dc3545}
+.aitem.td{background:#fff3e0;border-color:#fd7e14}
+.aitem.sn{background:#fffde7;border-color:#ffc107}
+.aitem .ic{font-size:1.3rem}
+.aitem strong{font-size:.85rem;display:block}
+.aitem span{font-size:.76rem;color:#666}
+.toast{position:fixed;bottom:24px;right:24px;background:#333;color:#fff;padding:11px 20px;border-radius:8px;font-size:.85rem;font-weight:600;opacity:0;transition:opacity .3s;z-index:9999}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:40px;color:#aaa}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NGP 포장기 월간 정비 리스트</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f0f4f8;color:#333}
+#authLoading{position:fixed;inset:0;background:#0070c0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:9999}
+.spinner{width:48px;height:48px;border:5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{background:#00467f;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{font-size:1.25rem}
+header span{font-size:.82rem;opacity:.85}
+.hright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.conn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:999px;font-size:.78rem;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:#aaa}
+.dot.on{background:#4cff72}
+.dot.off{background:#ff4c4c}
+.btn{padding:8px 14px;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer}
+.pri{background:#0070c0;color:#fff}
+.sec{background:#6c757d;color:#fff}
+.exp{background:#1d6f42;color:#fff}
+.alm{background:#fd7e14;color:#fff;border-radius:50px}
+.notice{display:none;background:#bbdefb;border-left:5px solid #0070c0;padding:10px 18px;margin:10px 18px 0;border-radius:8px;font-size:.82rem;font-weight:600;color:#00467f}
+.banner{display:none;border-left:5px solid #ffc107;padding:10px 18px;margin:10px 18px 0;border-radius:8px;background:#ffe69c}
+.banner.dg{background:#f5c2c7;border-left-color:#dc3545}
+.btitle{font-weight:700;font-size:.85rem;margin-bottom:5px}
+.bitem{font-size:.78rem;padding:2px 0}
+.bclose{float:right;background:none;border:none;font-size:1rem;cursor:pointer;opacity:.6}
+.wrap{max-width:1400px;margin:0 auto;padding:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:18px}
+.card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07);border-top:4px solid #0070c0}
+.card .n{font-size:1.6rem;font-weight:800}
+.card .l{font-size:.75rem;color:#666}
+.card.g{border-top-color:#28a745}
+.card.y{border-top-color:#ffc107}
+.card.r{border-top-color:#dc3545}
+.card.o{border-top-color:#fd7e14}
+.card.t{border-top-color:#20c997}
+.card.g .n{color:#28a745}
+.card.y .n{color:#e0a800}
+.card.r .n{color:#dc3545}
+.card.o .n{color:#fd7e14}
+.card.t .n{color:#20c997}
+.pwrap{background:#fff;border-radius:10px;padding:14px 18px;margin-bottom:18px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.plabel{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;margin-bottom:5px}
+.pbg{background:#e9ecef;border-radius:999px;height:11px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,#28a745,#85d99e);border-radius:999px;transition:width .5s}
+.tbar{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.tbar input,.tbar select{padding:7px 10px;border:1px solid #ccc;border-radius:7px;font-size:.82rem}
+.tbar input{width:190px}
+.twrap{background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.07);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:980px}
+thead tr{background:#0070c0;color:#fff}
+thead th{padding:10px 6px;text-align:center;white-space:nowrap}
+tbody tr{border-bottom:1px solid #e9ecef}
+tbody tr:nth-child(even){background:#fafafa}
+tr.today{background:#fff3e0!important}
+tr.soon{background:#fffde7!important}
+tr.delay{background:#ffeef0!important}
+tbody td{padding:8px 5px;text-align:center}
+tbody td:nth-child(4){text-align:left;padding-left:8px}
+.dday{display:inline-block;padding:2px 6px;border-radius:999px;font-size:.68rem;font-weight:700;margin-left:3px}
+.dt{background:#fd7e14;color:#fff}
+.ds{background:#ffc107;color:#333}
+.dl{background:#dc3545;color:#fff}
+.dn{background:#e9ecef;color:#555}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.b완료{background:#d4edda;color:#155724}
+.b진행중{background:#fff3cd;color:#856404}
+.b미완료{background:#e9ecef;color:#495057}
+.b지연{background:#f8d7da;color:#721c24}
+.b정상{background:#d4edda;color:#155724}
+.b이상{background:#ffe0b2;color:#b45309}
+.b보류{background:#e2d9f3;color:#4a235a}
+.abtns{display:flex;gap:3px;justify-content:center}
+.bsm{padding:4px 7px;font-size:.72rem;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+.be{background:#e3f2fd;color:#0070c0}
+.bd{background:#d4edda;color:#155724}
+.bx{background:#f8d7da;color:#721c24}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;justify-content:center;align-items:center}
+.ovl.on{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:95%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.modal h2{font-size:1.05rem;color:#00467f;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e9ecef}
+.modal.al h2{color:#dc3545;border-bottom-color:#f8d7da}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:.78rem;font-weight:600;color:#555}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid #ccc;border-radius:7px;font-size:.82rem;font-family:inherit}
+.fg textarea{resize:vertical;min-height:50px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #e9ecef}
+.aitem{display:flex;gap:10px;padding:10px;border-radius:8px;margin-bottom:8px;border:1px solid #e9ecef}
+.aitem.dl{background:#ffeef0;border-color:#dc3545}
+.aitem.td{background:#fff3e0;border-color:#fd7e14}
+.aitem.sn{background:#fffde7;border-color:#ffc107}
+.aitem .ic{font-size:1.3rem}
+.aitem strong{font-size:.85rem;display:block}
+.aitem span{font-size:.76rem;color:#666}
+.toast{position:fixed;bottom:24px;right:24px;background:#333;color:#fff;padding:11px 20px;border-radius:8px;font-size:.85rem;font-weight:600;opacity:0;transition:opacity .3s;z-index:9999}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:40px;color:#aaa}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr}.tbar input{width:100%}}
+</style>
+</head>
+<body>
+
+<div id="authLoading">
+  <div class="spinner"></div>
+  <div>Firebase 연결 중입니다...</div>
+</div>
+
+<header>
+  <div>
+    <h1>🔧 NGP 포장기 월간 정비 리스트</h1>
+    <span id="headerDate"></span>
+  </div>
+  <div class="hright">
+    <div class="conn">
+      <div class="dot" id="connDot"></div>
+      <span id="connText">연결 중...</span>
+    </div>
+      <button class="btn alm" onclick="openAlarmModal()">
+      🔔 알람
+      <span id="alarmBadge" style="display:none;background:#fff;color:#fd7e14;border-radius:999px;padding:1px 7px;margin-left:4px;font-size:.78rem;"></span>
+    </button>
+  </div>
+</header>
+
+<div class="notice" id="updateNotice">🔄 다른 사용자가 데이터를 업데이트했습니다.</div>
+
+<div class="banner dg" id="delayBanner">
+  <button class="bclose" onclick="this.parentElement.style.display='none'">✕</button>
+  <div class="btitle">🚨 지연된 정비 항목이 있습니다!</div>
+  <div id="delayBannerList"></div>
+</div>
+<div class="banner" id="todayBanner">
+  <button class="bclose" onclick="this.parentElement.style.display='none'">✕</button>
+  <div class="btitle">🔴 오늘 정비 예정 항목</div>
+  <div id="todayBannerList"></div>
+</div>
+<div class="banner" id="soonBanner">
+  <button class="bclose" onclick="this.parentElement.style.display='none'">✕</button>
+  <div class="btitle">🟡 3일 이내 정비 예정 항목</div>
+  <div id="soonBannerList"></div>
+</div>
+
+<div class="wrap">
+  <div class="cards">
+    <div class="card"><div class="n" id="totalCount">-</div><div class="l">전체 항목</div></div>
+    <div class="card g"><div class="n" id="doneCount">-</div><div class="l">✅ 완료</div></div>
+    <div class="card y"><div class="n" id="progressCount">-</div><div class="l">🔄 진행중</div></div>
+    <div class="card r"><div class="n" id="delayCount">-</div><div class="l">🚨 지연</div></div>
+    <div class="card"><div class="n" id="pendingCount" style="color:#6c757d">-</div><div class="l">⬜ 미완료</div></div>
+    <div class="card o"><div class="n" id="alarmCount">-</div><div class="l">🔔 알람</div></div>
+    <div class="card t"><div class="n" id="onlineCount">-</div><div class="l">👥 접속자</div></div>
+  </div>
+
+  <div class="pwrap">
+    <div class="plabel"><span>📊 월간 완료율</span><span id="progressPct">0%</span></div>
+    <div class="pbg"><div class="pfill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="tbar">
+    <input type="text" id="searchInput" placeholder="🔍 설비명 / 정비항목 검색" oninput="renderTable()"/>
+    <select id="filterStatus" onchange="renderTable()">
+      <option value="">전체 상태</option><option>미완료</option><option>진행중</option><option>완료</option><option>지연</option>
+    </select>
+    <select id="filterType" onchange="renderTable()">
+      <option value="">전체 구분</option><option>일상점검</option><option>예방정비</option><option>부품교체</option><option>긴급정비</option>
+    </select>
+    <select id="filterAlarm" onchange="renderTable()">
+      <option value="">전체 일정</option><option value="delay">지연 항목</option><option value="today">오늘 예정</option><option value="soon">3일 이내</option>
+    </select>
+    <button class="btn pri" onclick="openModal()">➕ 항목 추가</button>
+    <button class="btn exp" onclick="exportCSV()">📥 CSV 내보내기</button>
+    <button class="btn sec" onclick="resetAll()">🔄 초기화</button>
+  </div>
+
+  <div class="twrap">
+    <table>
+      <thead>
+        <tr>
+          <th>No.</th><th>설비명</th><th>설비코드</th><th>정비 항목</th><th>정비 구분</th>
+          <th>정비 주기</th><th>담당자</th><th>계획일/D-Day</th><th>완료일</th>
+          <th>가동정지</th><th>정비 결과</th><th>상태</th><th>비고</th><th>관리</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none">📋 등록된 정비 항목이 없습니다.</div>
+  </div>
+</div>
+
+<div class="ovl" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">➕ 정비 항목 추가</h2>
+    <div class="fgrid">
+      <div class="fg"><label>설비명 *</label><input type="text" id="f_name" placeholder="예: 포장기 #1"/></div>
+      <div class="fg"><label>설비 코드 *</label><input type="text" id="f_code" placeholder="예: PKG-001"/></div>
+      <div class="fg full"><label>정비 항목 *</label><input type="text" id="f_item" placeholder="예: 체인 윤활 및 장력 확인"/></div>
+      <div class="fg"><label>정비 구분</label>
+        <select id="f_type"><option>일상점검</option><option>예방정비</option><option>부품교체</option><option>긴급정비</option></select>
+      </div>
+      <div class="fg"><label>정비 주기</label>
+        <select id="f_cycle"><option>일 1회</option><option>주 1회</option><option>월 1회</option><option>분기 1회</option><option>반기 1회</option></select>
+      </div>
+      <div class="fg"><label>담당자</label><input type="text" id="f_manager" placeholder="담당자명"/></div>
+      <div class="fg"><label>계획일</label><input type="date" id="f_planDate"/></div>
+      <div class="fg"><label>완료일</label><input type="date" id="f_doneDate"/></div>
+      <div class="fg"><label>가동 정지</label>
+        <select id="f_stop"><option value="N">N (불필요)</option><option value="Y">Y (필요)</option></select>
+      </div>
+      <div class="fg"><label>정비 결과</label>
+        <select id="f_result"><option>정상</option><option>이상</option><option>보류</option></select>
+      </div>
+      <div class="fg"><label>상태</label>
+        <select id="f_status"><option>미완료</option><option>진행중</option><option>완료</option><option>지연</option></select>
+      </div>
+      <div class="fg full"><label>비고</label><textarea id="f_note" placeholder="특이사항을 입력하세요"></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn sec" onclick="closeModal()">취소</button>
+      <button class="btn pri" onclick="saveItem()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="ovl" id="alarmModalOverlay">
+  <div class="modal al">
+    <h2>🔔 정비 알람 현황</h2>
+    <div id="alarmModalList"></div>
+    <div class="mfoot"><button class="btn sec" onclick="closeAlarmModal()">닫기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ===================== Firebase 설정 =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyCQP8BZkRttQ9pfA_ZywH_eqNRHmrH9HsA",
+  authDomain: "maintenance-focke-ngp.firebaseapp.com",
+  databaseURL: "https://maintenance-focke-ngp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "maintenance-focke-ngp",
+  storageBucket: "maintenance-focke-ngp.firebasestorage.app",
+  messagingSenderId: "254053860981",
+  appId: "1:254053860981:web:4feea45a48f836c87b1a3c"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.database();
+
+let items = [];
+let editKey = null;
+let isFirstLoad = true;
+let itemsRef, onlineRef, userRef;
+
+// ===================== 익명 로그인 =====================
+auth.signInAnonymously()
+  .then(() => {
+    document.getElementById('authLoading').style.display = 'none';
+    initApp();
+  })
+  .catch((error) => {
+    document.getElementById('authLoading').innerHTML =
+      '<div style="text-align:center;">❌ 접속 실패<br><span style="font-size:.8rem;opacity:.8;">' + error.message + '</span></div>';
+  });
+
+// ===================== 앱 초기화 =====================
+function initApp() {
+  itemsRef  = db.ref('ngp_maintenance/items');
+  onlineRef = db.ref('.info/connected');
+  userRef   = db.ref('ngp_maintenance/online/' + Date.now());
+
+  userRef.set(true);
+  userRef.onDisconnect().remove();
+
+  db.ref('ngp_maintenance/online').on('value', snap => {
+    document.getElementById('onlineCount').textContent = snap.numChildren();
+  });
+
+  onlineRef.on('value', snap => {
+    const dot = document.getElementById('connDot');
+    const txt = document.getElementById('connText');
+    if (snap.val()) { dot.className = 'dot on'; txt.textContent = '실시간 연결됨'; }
+    else { dot.className = 'dot off'; txt.textContent = '연결 끊김'; }
+  });
+
+  itemsRef.on('value', snap => {
+    const data = snap.val();
+    items = [];
+    if (data) Object.entries(data).forEach(([key,val]) => items.push({...val, _key:key}));
+    if (!isFirstLoad) showUpdateNotice();
+    isFirstLoad = false;
+    checkAlarms();
+    renderTable();
+  });
+
+  setHeaderDate();
+  setInterval(() => { checkAlarms(); renderTable(); }, 60000);
+}
+
+// ===================== 날짜 유틸 =====================
+const todayStr = () => new Date().toISOString().split('T')[0];
+function diffDays(planDate) {
+  if (!planDate) return null;
+  return Math.ceil((new Date(planDate) - new Date(todayStr())) / 86400000);
+}
+function getDDayLabel(it) {
+  if (it.status === '완료') return null;
+  const d = diffDays(it.planDate);
+  if (d === null) return null;
+  if (d < 0)  return { text:`D+${Math.abs(d)} 지연`, cls:'dl' };
+  if (d === 0) return { text:'D-Day', cls:'dt' };
+  if (d <= 3)  return { text:`D-${d}`, cls:'ds' };
+  return { text:`D-${d}`, cls:'dn' };
+}
+
+// ===================== 업데이트 알림 =====================
+function showUpdateNotice() {
+  const el = document.getElementById('updateNotice');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// ===================== 알람 체크 =====================
+function checkAlarms() {
+  const delayItems=[], todayItems=[], soonItems=[];
+  items.forEach(it => {
+    if (it.status === '완료') return;
+    const d = diffDays(it.planDate);
+    if (d === null) return;
+    if (d < 0) delayItems.push({it,diff:d});
+    else if (d === 0) todayItems.push({it,diff:d});
+    else if (d <= 3) soonItems.push({it,diff:d});
+  });
+  const total = delayItems.length + todayItems.length + soonItems.length;
+  document.getElementById('alarmCount').textContent = total;
+  const badge = document.getElementById('alarmBadge');
+  badge.style.display = total>0 ? 'inline' : 'none';
+  badge.textContent = total;
+
+  renderBanner('delayBanner','delayBannerList',delayItems,
+    x=>`🔴 <strong>${x.it.name}</strong> — ${x.it.item} <span style="color:#dc3545;font-weight:700;">(${Math.abs(x.diff)}일 초과)</span>`);
+  renderBanner('todayBanner','todayBannerList',todayItems,
+    x=>`🔴 <strong>${x.it.name}</strong> — ${x.it.item} <span style="color:#fd7e14;font-weight:700;">(오늘 마감)</span>`);
+  renderBanner('soonBanner','soonBannerList',soonItems,
+    x=>`🟡 <strong>${x.it.name}</strong> — ${x.it.item} <span style="color:#856404;font-weight:700;">(D-${x.diff})</span>`);
+
+  sendPush(delayItems, todayItems);
+  return {delayItems, todayItems, soonItems};
+}
+
+function renderBanner(bId, lId, arr, tmpl) {
+  const b = document.getElementById(bId), l = document.getElementById(lId);
+  if (arr.length) { b.style.display='block'; l.innerHTML = arr.map(x=>`<div class="bitem">${tmpl(x)}</div>`).join(''); }
+  else b.style.display='none';
+}
+
+function sendPush(delayItems, todayItems) {
+  if (!('Notification' in window)) return;
+  const send = () => {
+    if (todayItems.length) new Notification('🔴 NGP 정비 알람', {body:`오늘 정비 예정: ${todayItems.map(x=>x.it.item).join(', ')}`});
+    if (delayItems.length) new Notification('🚨 NGP 정비 지연', {body:`지연 항목: ${delayItems.map(x=>x.it.item).join(', ')}`});
+  };
+  if (Notification.permission==='granted') send();
+  else if (Notification.permission!=='denied') Notification.requestPermission().then(p=>{if(p==='granted')send();});
+}
+
+// ===================== 알람 모달 =====================
+function openAlarmModal() {
+  const {delayItems,todayItems,soonItems} = checkAlarms();
+  let html='';
+  if (!delayItems.length && !todayItems.length && !soonItems.length)
+    html = '<div style="text-align:center;padding:30px;color:#aaa;"><div style="font-size:2rem;">✅</div>현재 알람이 없습니다!</div>';
+  delayItems.forEach(({it,diff})=>html+=aItem('dl','🚨',it,`계획일: ${it.planDate} | <span style="color:#dc3545;font-weight:700;">${Math.abs(diff)}일 초과 지연</span>`));
+  todayItems.forEach(({it})=>html+=aItem('td','🔴',it,`계획일: ${it.planDate} | <span style="color:#fd7e14;font-weight:700;">오늘 마감</span>`));
+  soonItems.forEach(({it,diff})=>html+=aItem('sn','🟡',it,`계획일: ${it.planDate} | <span style="color:#856404;font-weight:700;">D-${diff}</span>`));
+  document.getElementById('alarmModalList').innerHTML = html;
+  document.getElementById('alarmModalOverlay').classList.add('on');
+}
+function aItem(cls,icon,it,sub){
+  return `<div class="aitem ${cls}"><div class="ic">${icon}</div><div><strong>${it.name} — ${it.item}</strong><span>${sub}</span></div></div>`;
+}
+function closeAlarmModal(){ document.getElementById('alarmModalOverlay').classList.remove('on'); }
+
+// ===================== 헤더 날짜 =====================
+function setHeaderDate() {
+  const n = new Date();
+  document.getElementById('headerDate').textContent = `${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 (NGP 부서)`;
+}
+
+// ===================== 요약 카드 =====================
+function updateSummary(filtered) {
+  const all=filtered.length;
+  const done=filtered.filter(i=>i.status==='완료').length;
+  const prog=filtered.filter(i=>i.status==='진행중').length;
+  const delay=filtered.filter(i=>i.status==='지연').length;
+  const pend=filtered.filter(i=>i.status==='미완료').length;
+  const pct = all>0 ? Math.round(done/all*100) : 0;
+  document.getElementById('totalCount').textContent=all;
+  document.getElementById('doneCount').textContent=done;
+  document.getElementById('progressCount').textContent=prog;
+  document.getElementById('delayCount').textContent=delay;
+  document.getElementById('pendingCount').textContent=pend;
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+
+// ===================== 테이블 렌더 =====================
+function renderTable() {
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  const fStatus=document.getElementById('filterStatus').value;
+  const fType=document.getElementById('filterType').value;
+  const fAlarm=document.getElementById('filterAlarm').value;
+
+  let filtered = items.filter(it=>{
+    const ms=!search||it.name.toLowerCase().includes(search)||it.item.toLowerCase().includes(search);
+    const mSt=!fStatus||it.status===fStatus;
+    const mTy=!fType||it.type===fType;
+    let mAl=true;
+    if (fAlarm && it.status!=='완료') {
+      const d=diffDays(it.planDate);
+      if (fAlarm==='delay') mAl = d!==null&&d<0;
+      if (fAlarm==='today') mAl = d===0;
+      if (fAlarm==='soon')  mAl = d!==null&&d>0&&d<=3;
+    } else if (fAlarm) mAl=false;
+    return ms&&mSt&&mTy&&mAl;
+  });
+
+  updateSummary(filtered);
+  const tbody=document.getElementById('tableBody');
+  const empty=document.getElementById('emptyState');
+
+  if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  tbody.innerHTML = filtered.map((it, idx) => {
+    const dday = getDDayLabel(it);
+    const diff = diffDays(it.planDate);
+    let rowClass = '';
+    if (it.status !== '완료') {
+      if (diff !== null && diff < 0) rowClass = 'delay';
+      else if (diff === 0) rowClass = 'today';
+      else if (diff !== null && diff <= 3) rowClass = 'soon';
+    }
+    const ddayHtml = dday ? `<span class="dday ${dday.cls}">${dday.text}</span>` : '';
+
+    return `
+      <tr class="${rowClass}">
+        <td>${idx+1}</td>
+        <td><strong>${it.name}</strong></td>
+        <td><code>${it.code}</code></td>
+        <td style="text-align:left;padding-left:8px;">${it.item}</td>
+        <td>${it.type}</td>
+        <td>${it.cycle}</td>
+        <td>${it.manager||'-'}</td>
+        <td>${it.planDate||'-'} ${ddayHtml}</td>
+        <td>${it.doneDate||'-'}</td>
+        <td><span style="font-weight:700;color:${it.stop==='Y'?'#dc3545':'#28a745'}">${it.stop}</span></td>
+        <td><span class="badge b${it.result}">${it.result}</span></td>
+        <td><span class="badge b${it.status}">${it.status}</span></td>
+        <td style="max-width:110px;font-size:.78rem;">${it.note||'-'}</td>
+        <td>
+          <div class="abtns">
+            <button class="bsm bd" onclick="markDone('${it._key}')" title="완료">✅</button>
+            <button class="bsm be" onclick="openEdit('${it._key}')" title="수정">✏️</button>
+            <button class="bsm bx" onclick="deleteItem('${it._key}')" title="삭제">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ===================== 완료 처리 =====================
+function markDone(key) {
+  itemsRef.child(key).update({ status:'완료', doneDate: todayStr(), result:'정상' });
+  showToast('✅ 완료 처리되었습니다!');
+}
+
+// ===================== 삭제 =====================
+function deleteItem(key) {
+  if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+  itemsRef.child(key).remove();
+  showToast('🗑️ 항목이 삭제되었습니다.');
+}
+
+// ===================== 모달 열기/닫기 =====================
+function openModal() {
+  editKey = null;
+  document.getElementById('modalTitle').textContent = '➕ 정비 항목 추가';
+  clearForm();
+  document.getElementById('modalOverlay').classList.add('on');
+}
+
+function openEdit(key) {
+  editKey = key;
+  const it = items.find(i => i._key === key);
+  if (!it) return;
+  document.getElementById('modalTitle').textContent = '✏️ 정비 항목 수정';
+  document.getElementById('f_name').value     = it.name;
+  document.getElementById('f_code').value     = it.code;
+  document.getElementById('f_item').value     = it.item;
+  document.getElementById('f_type').value     = it.type;
+  document.getElementById('f_cycle').value    = it.cycle;
+  document.getElementById('f_manager').value  = it.manager;
+  document.getElementById('f_planDate').value = it.planDate;
+  document.getElementById('f_doneDate').value = it.doneDate;
+  document.getElementById('f_stop').value     = it.stop;
+  document.getElementById('f_result').value   = it.result;
+  document.getElementById('f_status').value   = it.status;
+  document.getElementById('f_note').value     = it.note;
+  document.getElementById('modalOverlay').classList.add('on');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('on');
+}
+
+function clearForm() {
+  ['f_name','f_code','f_item','f_manager','f_planDate','f_doneDate','f_note']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_type').value   = '일상점검';
+  document.getElementById('f_cycle').value  = '월 1회';
+  document.getElementById('f_stop').value   = 'N';
+  document.getElementById('f_result').value = '정상';
+  document.getElementById('f_status').value = '미완료';
+}
+
+// ===================== 저장 (Firebase) =====================
+function saveItem() {
+  const name = document.getElementById('f_name').value.trim();
+  const code = document.getElementById('f_code').value.trim();
+  const item = document.getElementById('f_item').value.trim();
+  if (!name || !code || !item) {
+    showToast('⚠️ 설비명, 설비코드, 정비항목은 필수입니다!');
+    return;
+  }
+  const obj = {
+    name, code, item,
+    type:     document.getElementById('f_type').value,
+    cycle:    document.getElementById('f_cycle').value,
+    manager:  document.getElementById('f_manager').value.trim(),
+    planDate: document.getElementById('f_planDate').value,
+    doneDate: document.getElementById('f_doneDate').value,
+    stop:     document.getElementById('f_stop').value,
+    result:   document.getElementById('f_result').value,
+    status:   document.getElementById('f_status').value,
+    note:     document.getElementById('f_note').value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+  if (editKey) {
+    itemsRef.child(editKey).update(obj);
+    showToast('✏️ 수정되었습니다!');
+  } else {
+    itemsRef.push(obj);
+    showToast('➕ 항목이 추가되었습니다!');
+  }
+  closeModal();
+}
+
+// ===================== CSV 내보내기 =====================
+function exportCSV() {
+  if (!items.length) { showToast('⚠️ 내보낼 데이터가 없습니다.'); return; }
+  const headers = ['No.','설비명','설비코드','정비항목','정비구분','정비주기','담당자','계획일','완료일','가동정지','정비결과','상태','비고'];
+  const rows = items.map((it,i) => [
+    i+1, it.name, it.code, it.item, it.type, it.cycle,
+    it.manager, it.planDate, it.doneDate, it.stop, it.result, it.status, it.note
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'NGP_포장기_월간정비_' + new Date().toISOString().slice(0,7) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥 CSV 다운로드 완료!');
+}
+
+// ===================== 초기화 =====================
+function resetAll() {
+  if (!confirm('모든 데이터를 초기화하시겠습니까?\n(Firebase 데이터도 삭제됩니다)')) return;
+  itemsRef.remove();
+  showToast('🔄 초기화 완료!');
+}
+
+// ===================== 토스트 =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===================== 모달 외부 클릭 닫기 =====================
+['modalOverlay','alarmModalOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('on');
+  });
+});
+</script>
+</body>
+</html>
