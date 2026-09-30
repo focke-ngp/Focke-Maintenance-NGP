@@ -390,6 +390,7 @@ function checkPassword() {
 if (sessionStorage.getItem('ngp_authed') === 'true') {
   document.getElementById('pwGate').style.display = 'none';
   document.getElementById('authLoading').style.display = 'flex';
+ startFirebaseAuth();   // ⭐ 이미 인증된 세션이면 바로 로그인 시작!
 }
 // ===================== Firebase 설정 =====================
 const firebaseConfig = {
