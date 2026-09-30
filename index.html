@@ -539,6 +539,7 @@ function updateSummary(filtered) {
   document.getElementById('progressFill').style.width=pct+'%';
 }
 // ===================== 카드 클릭 필터 =====================
+let cardFilter = 'all';
 function setCardFilter(type) {
   cardFilter = (cardFilter === type) ? 'all' : type;
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
