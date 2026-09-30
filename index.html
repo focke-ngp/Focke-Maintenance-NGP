@@ -539,9 +539,10 @@ function updateSummary(filtered) {
   document.getElementById('progressFill').style.width=pct+'%';
 }
 // ===================== 카드 클릭 필터 =====================
-let cardFilter = 'all';
 function setCardFilter(type) {
-  cardFilter = (cardFilter === type) ? 'all' : type;  // 같은 카드 다시 클릭하면 해제
+  console.log('🔍 클릭됨! type=' + type + ', 클릭 전 cardFilter=' + cardFilter);
+  cardFilter = (cardFilter === type) ? 'all' : type;
+  console.log('🔍 변경 후 cardFilter=' + cardFilter);
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
   const map = {done:'cardDone', prog:'cardProg', delay:'cardDelay', pending:'cardPending', alarm:'cardAlarm'};
   if (cardFilter !== 'all' && document.getElementById(map[cardFilter])) {
