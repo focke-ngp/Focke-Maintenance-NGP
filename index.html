@@ -556,7 +556,7 @@ function renderTable() {
   const fType=document.getElementById('filterType').value;
   const fAlarm=document.getElementById('filterAlarm').value;
 
-  let filtered = items.filter(it=>{
+  let baseFiltered = items.filter(it=>{
     const ms=!search||it.name.toLowerCase().includes(search)||it.item.toLowerCase().includes(search);
     const mSt=!fStatus||it.status===fStatus;
     const mTy=!fType||it.type===fType;
@@ -567,7 +567,10 @@ function renderTable() {
       if (fAlarm==='today') mAl = d===0;
       if (fAlarm==='soon')  mAl = d!==null&&d>0&&d<=7;
     } else if (fAlarm) mAl=false;
+    return ms&&mSt&&mTy&&mAl;
+  });
 
+  let filtered = baseFiltered.filter(it=>{
     let mCard = true;
     if (cardFilter === 'done')    mCard = it.status === '완료';
     if (cardFilter === 'prog')    mCard = it.status === '진행중';
@@ -577,17 +580,14 @@ function renderTable() {
       const d = diffDays(it.planDate);
       mCard = it.status !== '완료' && d !== null && d <= 7;
     }
-
-    return ms&&mSt&&mTy&&mAl&&mCard;
+    return mCard;
   });
 
- updateSummary(filtered);
+  updateSummary(baseFiltered);
   const tbody=document.getElementById('tableBody');
   const empty=document.getElementById('emptyState');
-
   if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-
   tbody.innerHTML = filtered.map((it, idx) => {
     const dday = getDDayLabel(it);
     const diff = diffDays(it.planDate);
@@ -598,7 +598,6 @@ function renderTable() {
       else if (diff !== null && diff <= 3) rowClass = 'soon';
     }
     const ddayHtml = dday ? `<span class="dday ${dday.cls}">${dday.text}</span>` : '';
-
     return `
       <tr class="${rowClass}">
         <td>${idx+1}</td>
@@ -623,7 +622,6 @@ function renderTable() {
       </tr>`;
   }).join('');
 }
-
 // ===================== 완료 처리 =====================
 function markDone(key) {
   const it = items.find(i => i._key === key);
@@ -677,7 +675,7 @@ function openEdit(key) {
   document.getElementById('f_manager').value  = it.manager;
   document.getElementById('f_planDate').value = it.planDate;
   document.getElementById('f_doneDate').value = it.doneDate;
-  document.getElementById('f_stop').value     = it.repeat || 'N';
+  document.getElementById('f_repeat').value     = it.repeat || 'N';
   document.getElementById('f_result').value   = it.result;
   document.getElementById('f_status').value   = it.status;
   document.getElementById('f_note').value     = it.note;
