@@ -333,7 +333,7 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
         <select id="f_type"><option>일상점검</option><option>예방정비</option><option>부품교체</option><option>긴급정비</option></select>
       </div>
       <div class="fg"><label>정비 주기</label>
-        <select id="f_cycle"><option>일 1회</option><option>주 1회</option><option>월 1회</option><option>분기 1회</option><option>반기 1회</option>
+        <select id="f_cycle"><option>일회성</option><option>주 1회</option><option>월 1회</option><option>분기 1회</option><option>반기 1회</option>
         <option>년 1회</option><option>2년 1회</option><option>5년 1회</option>
         </select>
       </div>
@@ -474,7 +474,7 @@ function getDDayLabel(it) {
 // ===================== 정비주기 → 일수 변환 =====================
 function cycleToDays(cycle) {
   const map = {
-    '일 1회': 1, '주 1회': 7, '월 1회': 30, '분기 1회': 90,
+    '일회성': 1, '주 1회': 7, '월 1회': 30, '분기 1회': 90,
     '반기 1회': 180, '년 1회': 365, '2년 1회': 730, '5년 1회': 1825
   };
   return map[cycle] || 30;
@@ -559,7 +559,11 @@ function updateSummary(filtered) {
   const all=filtered.length;
   const done=filtered.filter(i=>i.status==='완료').length;
   const prog=filtered.filter(i=>i.status==='진행중').length;
-  const delay=filtered.filter(i=>i.status==='지연').length;
+  const delay=filtered.filter(i=>{
+  if (i.status === '완료') return false;
+  const d = diffDays(i.planDate);
+  return d !== null && d < 0;
+  }).length;
   const pend=filtered.filter(i=>i.status==='미완료').length;
   const pct = all>0 ? Math.round(done/all*100) : 0;
   document.getElementById('totalCount').textContent=all;
@@ -606,7 +610,10 @@ function renderTable() {
     let mCard = true;
     if (cardFilter === 'done')    mCard = it.status === '완료';
     if (cardFilter === 'prog')    mCard = it.status === '진행중';
-    if (cardFilter === 'delay')   mCard = it.status === '지연';
+    if (cardFilter === 'delay') {
+      const d = diffDays(it.planDate);
+      mCard = it.status !== '완료' && d !== null && d < 0;
+    }
     if (cardFilter === 'pending') mCard = it.status === '미완료';
     if (cardFilter === 'alarm') {
       const d = diffDays(it.planDate);
