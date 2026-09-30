@@ -372,7 +372,7 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
 <div class="toast" id="toast"></div>
 <script>
 // ===================== 비밀번호 게이트 =====================
-const SITE_PASSWORD = "FOCKE";  // ⭐ 원하는 비밀번호로 변경하세요!
+const SITE_PASSWORD = "FOCKE";
 
 function checkPassword() {
   const input = document.getElementById('pwInput').value;
@@ -380,6 +380,7 @@ function checkPassword() {
     sessionStorage.setItem('ngp_authed', 'true');
     document.getElementById('pwGate').style.display = 'none';
     document.getElementById('authLoading').style.display = 'flex';
+    startFirebaseAuth();   // ⭐ 추가!
   } else {
     document.getElementById('pwError').style.display = 'block';
     document.getElementById('pwInput').value = '';
@@ -387,11 +388,6 @@ function checkPassword() {
   }
 }
 
-if (sessionStorage.getItem('ngp_authed') === 'true') {
-  document.getElementById('pwGate').style.display = 'none';
-  document.getElementById('authLoading').style.display = 'flex';
- startFirebaseAuth();   // ⭐ 이미 인증된 세션이면 바로 로그인 시작!
-}
 // ===================== Firebase 설정 =====================
 const firebaseConfig = {
   apiKey: "AIzaSyCQP8BZkRttQ9pfA_ZywH_eqNRHmrH9HsA",
@@ -402,47 +398,50 @@ const firebaseConfig = {
   messagingSenderId: "254053860981",
   appId: "1:254053860981:web:4feea45a48f836c87b1a3c"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.database();
-
 let items = [];
 let editKey = null;
 let isFirstLoad = true;
 let itemsRef, onlineRef, userRef;
 
-// ===================== 익명 로그인 =====================
-auth.signInAnonymously()
-  .then(() => {
-    document.getElementById('authLoading').style.display = 'none';
-    initApp();
-  })
-  .catch((error) => {
-    document.getElementById('authLoading').innerHTML =
-      '<div style="text-align:center;">❌ 접속 실패<br><span style="font-size:.8rem;opacity:.8;">' + error.message + '</span></div>';
-  });
+// ===================== 익명 로그인 (함수로 감싸기!) =====================
+function startFirebaseAuth() {
+  auth.signInAnonymously()
+    .then(() => {
+      document.getElementById('authLoading').style.display = 'none';
+      initApp();
+    })
+    .catch((error) => {
+      document.getElementById('authLoading').innerHTML =
+        '<div style="text-align:center;">❌ 접속 실패<br><span style="font-size:.8rem;opacity:.8;">' + error.message + '</span></div>';
+    });
+}
+
+// ===================== 세션 체크 (이미 인증된 경우) =====================
+if (sessionStorage.getItem('ngp_authed') === 'true') {
+  document.getElementById('pwGate').style.display = 'none';
+  document.getElementById('authLoading').style.display = 'flex';
+  startFirebaseAuth();
+}
 
 // ===================== 앱 초기화 =====================
 function initApp() {
   itemsRef  = db.ref('ngp_maintenance/items');
   onlineRef = db.ref('.info/connected');
   userRef   = db.ref('ngp_maintenance/online/' + Date.now());
-
   userRef.set(true);
   userRef.onDisconnect().remove();
-
   db.ref('ngp_maintenance/online').on('value', snap => {
     document.getElementById('onlineCount').textContent = snap.numChildren();
   });
-
   onlineRef.on('value', snap => {
     const dot = document.getElementById('connDot');
     const txt = document.getElementById('connText');
     if (snap.val()) { dot.className = 'dot on'; txt.textContent = '실시간 연결됨'; }
     else { dot.className = 'dot off'; txt.textContent = '연결 끊김'; }
   });
-
   itemsRef.on('value', snap => {
     const data = snap.val();
     items = [];
@@ -452,7 +451,6 @@ function initApp() {
     checkAlarms();
     renderTable();
   });
-
   setHeaderDate();
   setInterval(() => { checkAlarms(); renderTable(); }, 60000);
 }
@@ -472,6 +470,7 @@ function getDDayLabel(it) {
   if (d <= 7)  return { text:`D-${d}`, cls:'ds' };
   return { text:`D-${d}`, cls:'dn' };
 }
+
 // ===================== 정비주기 → 일수 변환 =====================
 function cycleToDays(cycle) {
   const map = {
@@ -480,6 +479,7 @@ function cycleToDays(cycle) {
   };
   return map[cycle] || 30;
 }
+
 // ===================== 업데이트 알림 =====================
 function showUpdateNotice() {
   const el = document.getElementById('updateNotice');
