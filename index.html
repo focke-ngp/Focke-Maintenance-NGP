@@ -33,10 +33,12 @@ header span{font-size:.82rem;opacity:.85}
 .bitem{font-size:.78rem;padding:2px 0}
 .bclose{float:right;background:none;border:none;font-size:1rem;cursor:pointer;opacity:.6}
 .wrap{max-width:1400px;margin:0 auto;padding:18px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:18px}
-.card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07);border-top:4px solid #0070c0}
-.card .n{font-size:1.6rem;font-weight:800}
-.card .l{font-size:.75rem;color:#666}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:14px}
+.card{background:#fff;border-radius:8px;padding:9px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.07);border-top:3px solid #0070c0;cursor:pointer;transition:transform .15s,box-shadow .15s;user-select:none}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.card.active{box-shadow:0 0 0 2px #0070c0 inset,0 2px 5px rgba(0,0,0,.07)}
+.card .n{font-size:1.15rem;font-weight:800}
+.card .l{font-size:.68rem;color:#666}
 .card.g{border-top-color:#28a745}
 .card.y{border-top-color:#ffc107}
 .card.r{border-top-color:#dc3545}
@@ -228,12 +230,17 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
     <h1>🔧 NGP 포장기 월간 정비 리스트</h1>
     <span id="headerDate"></span>
   </div>
-  <div class="hright">
-    <div class="conn">
-      <div class="dot" id="connDot"></div>
-      <span id="connText">연결 중...</span>
-    </div>
-      <button class="btn alm" onclick="openAlarmModal()">
+<div class="hright">
+  <div class="conn">
+    <div class="dot" id="connDot"></div>
+    <span id="connText">연결 중...</span>
+  </div>
+  <div class="conn" style="background:rgba(255,255,255,.15);">
+    <span style="font-size:.9rem;">👥</span>
+    <span id="onlineCount" style="font-weight:700;">-</span>
+    <span style="font-size:.72rem;opacity:.85;">명 접속중</span>
+  </div>
+  <button class="btn alm" onclick="openAlarmModal()">
       🔔 알람
       <span id="alarmBadge" style="display:none;background:#fff;color:#fd7e14;border-radius:999px;padding:1px 7px;margin-left:4px;font-size:.78rem;"></span>
     </button>
@@ -254,19 +261,18 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
 </div>
 <div class="banner" id="soonBanner">
   <button class="bclose" onclick="this.parentElement.style.display='none'">✕</button>
-  <div class="btitle">🟡 3일 이내 정비 예정 항목</div>
+  <div class="btitle">🟡 1주일 이내 정비 예정 항목</div>
   <div id="soonBannerList"></div>
 </div>
 
 <div class="wrap">
   <div class="cards">
-    <div class="card"><div class="n" id="totalCount">-</div><div class="l">전체 항목</div></div>
-    <div class="card g"><div class="n" id="doneCount">-</div><div class="l">✅ 완료</div></div>
-    <div class="card y"><div class="n" id="progressCount">-</div><div class="l">🔄 진행중</div></div>
-    <div class="card r"><div class="n" id="delayCount">-</div><div class="l">🚨 지연</div></div>
-    <div class="card"><div class="n" id="pendingCount" style="color:#6c757d">-</div><div class="l">⬜ 미완료</div></div>
-    <div class="card o"><div class="n" id="alarmCount">-</div><div class="l">🔔 알람</div></div>
-    <div class="card t"><div class="n" id="onlineCount">-</div><div class="l">👥 접속자</div></div>
+  <div class="card"><div class="n" id="totalCount">-</div><div class="l">전체 항목</div></div>
+  <div class="card g"><div class="n" id="doneCount">-</div><div class="l">✅ 완료</div></div>
+  <div class="card y"><div class="n" id="progressCount">-</div><div class="l">🔄 진행중</div></div>
+  <div class="card r"><div class="n" id="delayCount">-</div><div class="l">🚨 지연</div></div>
+  <div class="card"><div class="n" id="pendingCount" style="color:#6c757d">-</div><div class="l">⬜ 미완료</div></div>
+  <div class="card o"><div class="n" id="alarmCount">-</div><div class="l">🔔 알람</div></div>
   </div>
 
   <div class="pwrap">
@@ -283,7 +289,7 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
       <option value="">전체 구분</option><option>일상점검</option><option>예방정비</option><option>부품교체</option><option>긴급정비</option>
     </select>
     <select id="filterAlarm" onchange="renderTable()">
-      <option value="">전체 일정</option><option value="delay">지연 항목</option><option value="today">오늘 예정</option><option value="soon">3일 이내</option>
+      <option value="">전체 일정</option><option value="delay">지연 항목</option><option value="today">오늘 예정</option><option value="soon">1주일 이내</option>
     </select>
     <button class="btn pri" onclick="openModal()">➕ 항목 추가</button>
     <button class="btn exp" onclick="exportCSV()">📥 CSV 내보내기</button>
@@ -296,7 +302,7 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
         <tr>
           <th>No.</th><th>설비명</th><th>설비코드</th><th>정비 항목</th><th>정비 구분</th>
           <th>정비 주기</th><th>담당자</th><th>계획일/D-Day</th><th>완료일</th>
-          <th>가동정지</th><th>정비 결과</th><th>상태</th><th>비고</th><th>관리</th>
+          </th><th>정비 결과</th><th>상태</th><th>비고</th><th>관리</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -310,25 +316,30 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
     <h2 id="modalTitle">➕ 정비 항목 추가</h2>
     <div class="fgrid">
       <div class="fg"><label>설비명 *</label><input type="text" id="f_name" placeholder="예: 포장기 #1"/></div>
-      <div class="fg"><label>설비 코드 *</label><input type="text" id="f_code" placeholder="예: PKG-001"/></div>
+      <div class="fg"><label>설비 코드 *</label><input type="text" id="f_code" placeholder="예: 552,751,411"/></div>
       <div class="fg full"><label>정비 항목 *</label><input type="text" id="f_item" placeholder="예: 체인 윤활 및 장력 확인"/></div>
       <div class="fg"><label>정비 구분</label>
         <select id="f_type"><option>일상점검</option><option>예방정비</option><option>부품교체</option><option>긴급정비</option></select>
       </div>
       <div class="fg"><label>정비 주기</label>
-        <select id="f_cycle"><option>일 1회</option><option>주 1회</option><option>월 1회</option><option>분기 1회</option><option>반기 1회</option></select>
+        <select id="f_cycle"><option>일 1회</option><option>주 1회</option><option>월 1회</option><option>분기 1회</option><option>반기 1회</option>
+        <option>년 1회</option><option>2년 1회</option><option>5년 1회</option>
+        </select>
       </div>
       <div class="fg"><label>담당자</label><input type="text" id="f_manager" placeholder="담당자명"/></div>
       <div class="fg"><label>계획일</label><input type="date" id="f_planDate"/></div>
       <div class="fg"><label>완료일</label><input type="date" id="f_doneDate"/></div>
-      <div class="fg"><label>가동 정지</label>
-        <select id="f_stop"><option value="N">N (불필요)</option><option value="Y">Y (필요)</option></select>
-      </div>
       <div class="fg"><label>정비 결과</label>
         <select id="f_result"><option>정상</option><option>이상</option><option>보류</option></select>
       </div>
       <div class="fg"><label>상태</label>
-        <select id="f_status"><option>미완료</option><option>진행중</option><option>완료</option><option>지연</option></select>
+  <select id="f_status"><option>미완료</option><option>진행중</option><option>완료</option><option>지연</option></select>
+</div>
+<div class="fg"><label>반복 정비</label>
+  <select id="f_repeat">
+    <option value="N">일반 (1회성)</option>
+    <option value="Y">반복 (완료 시 자동 재설정)</option>
+  </select>
       </div>
       <div class="fg full"><label>비고</label><textarea id="f_note" placeholder="특이사항을 입력하세요"></textarea></div>
     </div>
@@ -426,10 +437,17 @@ function getDDayLabel(it) {
   if (d === null) return null;
   if (d < 0)  return { text:`D+${Math.abs(d)} 지연`, cls:'dl' };
   if (d === 0) return { text:'D-Day', cls:'dt' };
-  if (d <= 3)  return { text:`D-${d}`, cls:'ds' };
+  if (d <= 7)  return { text:`D-${d}`, cls:'ds' };
   return { text:`D-${d}`, cls:'dn' };
 }
-
+// ===================== 정비주기 → 일수 변환 =====================
+function cycleToDays(cycle) {
+  const map = {
+    '일 1회': 1, '주 1회': 7, '월 1회': 30, '분기 1회': 90,
+    '반기 1회': 180, '년 1회': 365, '2년 1회': 730, '5년 1회': 1825
+  };
+  return map[cycle] || 30;
+}
 // ===================== 업데이트 알림 =====================
 function showUpdateNotice() {
   const el = document.getElementById('updateNotice');
@@ -446,7 +464,7 @@ function checkAlarms() {
     if (d === null) return;
     if (d < 0) delayItems.push({it,diff:d});
     else if (d === 0) todayItems.push({it,diff:d});
-    else if (d <= 3) soonItems.push({it,diff:d});
+    else if (d <= 7) soonItems.push({it,diff:d});
   });
   const total = delayItems.length + todayItems.length + soonItems.length;
   document.getElementById('alarmCount').textContent = total;
@@ -520,7 +538,17 @@ function updateSummary(filtered) {
   document.getElementById('progressPct').textContent=pct+'%';
   document.getElementById('progressFill').style.width=pct+'%';
 }
-
+// ===================== 카드 클릭 필터 =====================
+let cardFilter = 'all';
+function setCardFilter(type) {
+  cardFilter = (cardFilter === type) ? 'all' : type;  // 같은 카드 다시 클릭하면 해제
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  const map = {done:'cardDone', prog:'cardProg', delay:'cardDelay', pending:'cardPending', alarm:'cardAlarm'};
+  if (cardFilter !== 'all' && document.getElementById(map[cardFilter])) {
+    document.getElementById(map[cardFilter]).classList.add('active');
+  }
+  renderTable();
+}
 // ===================== 테이블 렌더 =====================
 function renderTable() {
   const search=document.getElementById('searchInput').value.toLowerCase();
@@ -537,12 +565,23 @@ function renderTable() {
       const d=diffDays(it.planDate);
       if (fAlarm==='delay') mAl = d!==null&&d<0;
       if (fAlarm==='today') mAl = d===0;
-      if (fAlarm==='soon')  mAl = d!==null&&d>0&&d<=3;
+      if (fAlarm==='soon')  mAl = d!==null&&d>0&&d<=7;
     } else if (fAlarm) mAl=false;
-    return ms&&mSt&&mTy&&mAl;
+
+    let mCard = true;
+    if (cardFilter === 'done')    mCard = it.status === '완료';
+    if (cardFilter === 'prog')    mCard = it.status === '진행중';
+    if (cardFilter === 'delay')   mCard = it.status === '지연';
+    if (cardFilter === 'pending') mCard = it.status === '미완료';
+    if (cardFilter === 'alarm') {
+      const d = diffDays(it.planDate);
+      mCard = it.status !== '완료' && d !== null && d <= 7;
+    }
+
+    return ms&&mSt&&mTy&&mAl&&mCard;
   });
 
-  updateSummary(filtered);
+ updateSummary(filtered);
   const tbody=document.getElementById('tableBody');
   const empty=document.getElementById('emptyState');
 
@@ -569,9 +608,8 @@ function renderTable() {
         <td>${it.type}</td>
         <td>${it.cycle}</td>
         <td>${it.manager||'-'}</td>
-        <td>${it.planDate||'-'} ${ddayHtml}</td>
+        <td>${it.planDate||'-'} ${ddayHtml} ${it.repeat==='Y'?'<span style="font-size:.7rem;background:#e3f2fd;color:#0070c0;padding:1px 5px;border-radius:999px;margin-left:3px;">🔁반복</span>':''}</td>
         <td>${it.doneDate||'-'}</td>
-        <td><span style="font-weight:700;color:${it.stop==='Y'?'#dc3545':'#28a745'}">${it.stop}</span></td>
         <td><span class="badge b${it.result}">${it.result}</span></td>
         <td><span class="badge b${it.status}">${it.status}</span></td>
         <td style="max-width:110px;font-size:.78rem;">${it.note||'-'}</td>
@@ -588,8 +626,27 @@ function renderTable() {
 
 // ===================== 완료 처리 =====================
 function markDone(key) {
-  itemsRef.child(key).update({ status:'완료', doneDate: todayStr(), result:'정상' });
-  showToast('✅ 완료 처리되었습니다!');
+  const it = items.find(i => i._key === key);
+  if (!it) return;
+
+  if (it.repeat === 'Y') {
+    const days = cycleToDays(it.cycle);
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + days);
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+
+    itemsRef.child(key).update({
+      status: '미완료',
+      doneDate: todayStr(),
+      lastDone: todayStr(),
+      planDate: nextDateStr,
+      result: '정상'
+    });
+    showToast(`✅ 완료! 다음 정비일: ${nextDateStr}`);
+  } else {
+    itemsRef.child(key).update({ status:'완료', doneDate: todayStr(), result:'정상' });
+    showToast('✅ 완료 처리되었습니다!');
+  }
 }
 
 // ===================== 삭제 =====================
@@ -620,7 +677,7 @@ function openEdit(key) {
   document.getElementById('f_manager').value  = it.manager;
   document.getElementById('f_planDate').value = it.planDate;
   document.getElementById('f_doneDate').value = it.doneDate;
-  document.getElementById('f_stop').value     = it.stop;
+  document.getElementById('f_stop').value     = it.repeat || 'N';
   document.getElementById('f_result').value   = it.result;
   document.getElementById('f_status').value   = it.status;
   document.getElementById('f_note').value     = it.note;
@@ -636,7 +693,7 @@ function clearForm() {
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('f_type').value   = '일상점검';
   document.getElementById('f_cycle').value  = '월 1회';
-  document.getElementById('f_stop').value   = 'N';
+  document.getElementById('f_repeat').value   = 'N';
   document.getElementById('f_result').value = '정상';
   document.getElementById('f_status').value = '미완료';
 }
@@ -657,7 +714,7 @@ function saveItem() {
     manager:  document.getElementById('f_manager').value.trim(),
     planDate: document.getElementById('f_planDate').value,
     doneDate: document.getElementById('f_doneDate').value,
-    stop:     document.getElementById('f_stop').value,
+    repeat:   document.getElementById('f_repeat').value,
     result:   document.getElementById('f_result').value,
     status:   document.getElementById('f_status').value,
     note:     document.getElementById('f_note').value.trim(),
@@ -676,7 +733,7 @@ function saveItem() {
 // ===================== CSV 내보내기 =====================
 function exportCSV() {
   if (!items.length) { showToast('⚠️ 내보낼 데이터가 없습니다.'); return; }
-  const headers = ['No.','설비명','설비코드','정비항목','정비구분','정비주기','담당자','계획일','완료일','가동정지','정비결과','상태','비고'];
+  const headers = ['No.','설비명','설비코드','정비항목','정비구분','정비주기','담당자','계획일','완료일','정비결과','상태','비고'];
   const rows = items.map((it,i) => [
     i+1, it.name, it.code, it.item, it.type, it.cycle,
     it.manager, it.planDate, it.doneDate, it.stop, it.result, it.status, it.note
