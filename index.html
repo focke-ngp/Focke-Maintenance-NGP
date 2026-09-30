@@ -266,14 +266,14 @@ tbody td:nth-child(4){text-align:left;padding-left:8px}
 </div>
 
 <div class="wrap">
-  <div class="cards">
-  <div class="card"><div class="n" id="totalCount">-</div><div class="l">전체 항목</div></div>
-  <div class="card g"><div class="n" id="doneCount">-</div><div class="l">✅ 완료</div></div>
-  <div class="card y"><div class="n" id="progressCount">-</div><div class="l">🔄 진행중</div></div>
-  <div class="card r"><div class="n" id="delayCount">-</div><div class="l">🚨 지연</div></div>
-  <div class="card"><div class="n" id="pendingCount" style="color:#6c757d">-</div><div class="l">⬜ 미완료</div></div>
-  <div class="card o"><div class="n" id="alarmCount">-</div><div class="l">🔔 알람</div></div>
-  </div>
+ <div class="cards">
+  <div class="card" id="cardAll" onclick="setCardFilter('all')"><div class="n" id="totalCount">-</div><div class="l">전체 항목</div></div>
+  <div class="card g" id="cardDone" onclick="setCardFilter('done')"><div class="n" id="doneCount">-</div><div class="l">✅ 완료</div></div>
+  <div class="card y" id="cardProg" onclick="setCardFilter('prog')"><div class="n" id="progressCount">-</div><div class="l">🔄 진행중</div></div>
+  <div class="card r" id="cardDelay" onclick="setCardFilter('delay')"><div class="n" id="delayCount">-</div><div class="l">🚨 지연</div></div>
+  <div class="card" id="cardPending" onclick="setCardFilter('pending')"><div class="n" id="pendingCount" style="color:#6c757d">-</div><div class="l">⬜ 미완료</div></div>
+  <div class="card o" id="cardAlarm" onclick="setCardFilter('alarm')"><div class="n" id="alarmCount">-</div><div class="l">🔔 알람</div></div>
+</div>
 
   <div class="pwrap">
     <div class="plabel"><span>📊 월간 완료율</span><span id="progressPct">0%</span></div>
@@ -540,15 +540,14 @@ function updateSummary(filtered) {
 }
 // ===================== 카드 클릭 필터 =====================
 function setCardFilter(type) {
-  console.log('🔍 클릭됨! type=' + type + ', 클릭 전 cardFilter=' + cardFilter);
   cardFilter = (cardFilter === type) ? 'all' : type;
-  console.log('🔍 변경 후 cardFilter=' + cardFilter);
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
   const map = {done:'cardDone', prog:'cardProg', delay:'cardDelay', pending:'cardPending', alarm:'cardAlarm'};
   if (cardFilter !== 'all' && document.getElementById(map[cardFilter])) {
     document.getElementById(map[cardFilter]).classList.add('active');
   }
   renderTable();
+}
 }
 // ===================== 테이블 렌더 =====================
 function renderTable() {
