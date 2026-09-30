@@ -666,6 +666,8 @@ function markDone(key) {
   const it = items.find(i => i._key === key);
   if (!it) return;
 
+  if (!confirm(`"${it.name} - ${it.item}" 항목을 완료 처리하시겠습니까?`)) return;
+
   if (it.repeat === 'Y') {
     const days = cycleToDays(it.cycle);
     const nextDate = new Date();
